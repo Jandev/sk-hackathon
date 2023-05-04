@@ -1,11 +1,15 @@
-# Project name
+# Semantic Kernel hackathon
 
-What is this about
+This repository contains some sample projects which are can be used in a workshop.
 
-# Set up
+## Assignment 1
 
-This is what you need to do to run it yourself
+Create an API which can summarize a specified webpage.
+Expected duration: 30 - 60 minutes
 
-# Sample usage
+Steps involved:
 
-See what it does
+- Create an Azure Function with an HTTP Trigger
+- Add Semantic Kernel to the project
+- Create a skill and function to summarize an URL
+- Invoke and return the results
