@@ -40,18 +40,27 @@ namespace assignment_1
 				throw new ArgumentException(nameof(data), "Input not in the correct format.");
 			}
 			var websiteRequest = new WebsiteRequest(new Uri(data.Url));
-			var summary = await this.invoker.Invoke(websiteRequest);
-
-			var response = req.CreateResponse(HttpStatusCode.OK);
-			response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
-
-			await response.WriteAsJsonAsync(new Response
+			try
 			{
-				Ask = websiteRequest.url.ToString(),
-				Summary = summary
-			});
+				var summary = await this.invoker.Invoke(websiteRequest);
 
-			return response;
+				var response = req.CreateResponse(HttpStatusCode.OK);
+				response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
+
+				await response.WriteAsJsonAsync(new Response
+				{
+					Ask = websiteRequest.Url.ToString(),
+					Summary = summary
+				});
+				return response;
+			}
+			catch (Exception ex)
+			{
+				var response = req.CreateResponse(HttpStatusCode.InternalServerError);
+				response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
+				response.WriteString(ex.Message);
+				return response;
+			}
 		}
 
 		public class Request

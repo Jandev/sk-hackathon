@@ -1,7 +1,11 @@
 {
-    "IsEncrypted": false,
-    "Values": {
-        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
-    }
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "OpenAi:ServiceCompletionEndpoint": "https://westeurope.api.cognitive.microsoft.com/",
+    "OpenAi:ServiceKey": "",
+    "OpenAi:ServiceDeploymentId": "",
+    "OpenAi:ServiceModelName": "text-davinci-003"
+  }
 }
