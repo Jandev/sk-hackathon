@@ -51,7 +51,7 @@ namespace assignment_1
 				{
 					c.AddAzureTextCompletionService(
 						serviceDeploymentId,
-						serviceModelName,
+						serviceDeploymentId,
 						serviceCompletionEndpoint,
 						serviceKey);
 				});

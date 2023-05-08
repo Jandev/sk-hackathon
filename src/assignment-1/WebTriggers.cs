@@ -45,7 +45,6 @@ namespace assignment_1
 				var summary = await this.invoker.Invoke(websiteRequest);
 
 				var response = req.CreateResponse(HttpStatusCode.OK);
-				response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
 
 				await response.WriteAsJsonAsync(new Response
 				{
@@ -57,7 +56,6 @@ namespace assignment_1
 			catch (Exception ex)
 			{
 				var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-				response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
 				response.WriteString(ex.Message);
 				return response;
 			}
