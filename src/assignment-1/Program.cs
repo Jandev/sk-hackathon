@@ -14,6 +14,7 @@ var host = new HostBuilder()
 				configuration.GetSection(nameof(Settings.OpenAi)).Bind(settings);
 			});
 		s.AddTransient<IInvoker<WebsiteRequest>, Website>();
+		s.AddTransient<IInvoker<TextRequest>, Text>();
 	})
 	.ConfigureHostConfiguration(c =>
 	{

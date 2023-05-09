@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.KernelExtensions;
 using Microsoft.SemanticKernel.TemplateEngine;
 using System.Reflection;
 
@@ -28,6 +27,7 @@ namespace assignment_1
 			{
 				throw new InvalidOperationException($"Builder needs to be initialized first using ${nameof(KernelFactory.Initialize)}.");
 			}
+
 			KernelBuilder builder = Kernel.Builder;
 			builder = ConfigureKernelBuilder(
 				serviceDeploymentId,
@@ -66,7 +66,6 @@ namespace assignment_1
 			IKernel kernel = builder.Build();
 
 			RegisterSemanticSkills(kernel, SkillsPath(), logger);
-
 			return kernel;
 		}
 
