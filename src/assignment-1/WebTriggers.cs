@@ -110,6 +110,7 @@ namespace assignment_1
 			}
 		}
 
+		[Function(nameof(Query))]
 		public async Task<HttpResponseData> Query(
 			[HttpTrigger(AuthorizationLevel.Function, "post")]
 			HttpRequestData requestData,

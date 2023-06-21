@@ -9,11 +9,9 @@ namespace assignment_1
 	{
 		private static List<string> skillsToLoad = new List<string>();
 
-		private static bool isInitialized = false;
 		internal static void Initialize(string[] skillsToLoad)
 		{
 			KernelFactory.skillsToLoad.AddRange(skillsToLoad);
-			isInitialized = true;
 		}
 
 		internal static IKernel CreateForRequest(
@@ -23,11 +21,6 @@ namespace assignment_1
 			string serviceModelName,
 			ILogger logger)
 		{
-			if (!isInitialized)
-			{
-				throw new InvalidOperationException($"Builder needs to be initialized first using ${nameof(KernelFactory.Initialize)}.");
-			}
-
 			KernelBuilder builder = Kernel.Builder;
 			builder = ConfigureKernelBuilder(
 				serviceDeploymentId,

@@ -31,8 +31,12 @@ namespace assignment_1.Summarize
 			var executedPlan = await ExecutePlanAsync(kernel, plan, request.Query);
 
 			logger.LogDebug(plan.ToJson());
+			foreach(var state in executedPlan.State)
+			{
+				logger.LogDebug(state.Key + " : " + state.Value.Trim());
+			}
 
-			return string.Join(",", executedPlan.Outputs);
+			return executedPlan.State["PLAN.RESULT"]?.Trim() ?? string.Empty;
 		}
 
 		private async Task<Plan> ExecutePlanAsync(
