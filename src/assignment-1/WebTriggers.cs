@@ -4,6 +4,7 @@ using assignment_1.Summarize;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using static Google.Apis.CustomSearchAPI.v1.Data.Search.QueriesData;
 
 namespace assignment_1
 {
@@ -13,17 +14,20 @@ namespace assignment_1
 		private readonly IInvoker<WebsiteRequest> websiteSummaryInvoker;
 		private readonly IInvoker<Summarize.TextRequest> textInvoker;
 		private readonly IInvoker<NaturalLanguageQueryRequest> naturalLangaugeQueryInvoker;
+		private readonly Embeddings.Index index;
 
 		public WebTriggers(
 			IInvoker<WebsiteRequest> websiteSummaryInvoker,
 			IInvoker<Summarize.TextRequest> repositorySummaryInvoker,
 			IInvoker<Summarize.NaturalLanguageQueryRequest> naturalLanguageQueryInvoker,
+			assignment_1.Embeddings.Index index,
 			ILoggerFactory loggerFactory)
 		{
 			_logger = loggerFactory.CreateLogger<WebTriggers>();
 			this.websiteSummaryInvoker = websiteSummaryInvoker;
 			this.textInvoker = repositorySummaryInvoker;
 			this.naturalLangaugeQueryInvoker = naturalLanguageQueryInvoker;
+			this.index = index;
 		}
 
 		[Function(nameof(Summarize))]
@@ -34,13 +38,7 @@ namespace assignment_1
 		{
 			using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(hostCancellationToken);
 
-			var data = await JsonSerializer.DeserializeAsync<WebsiteSummaryRequest>(
-				new StreamReader(req.Body).BaseStream,
-				options: new JsonSerializerOptions
-				{
-					PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-				},
-				cancellationToken: cancellationSource.Token);
+			var data = await GetRequestData<WebsiteSummaryRequest>(req, cancellationSource);
 			if (data == null || string.IsNullOrWhiteSpace(data.Url))
 			{
 				throw new ArgumentException(nameof(data), "Input not in the correct format.");
@@ -50,14 +48,12 @@ namespace assignment_1
 			{
 				var summary = await this.websiteSummaryInvoker.Invoke(websiteRequest);
 
-				var response = req.CreateResponse(HttpStatusCode.OK);
-
-				await response.WriteAsJsonAsync(new WebsiteSummaryResponse
+				var response = new WebsiteSummaryResponse
 				{
 					Ask = websiteRequest.Url.ToString(),
 					Summary = summary
-				});
-				return response;
+				};
+				return await CreateValidResponse(req, response);
 			}
 			catch (Exception ex)
 			{
@@ -76,13 +72,7 @@ namespace assignment_1
 		{
 			using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(hostCancellationToken);
 
-			var data = await JsonSerializer.DeserializeAsync<TextSummaryRequest>(
-				new StreamReader(req.Body).BaseStream,
-				options: new JsonSerializerOptions
-				{
-					PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-				},
-				cancellationToken: cancellationSource.Token);
+			var data = await GetRequestData<TextSummaryRequest>(req, cancellationSource);
 			if (data == null || string.IsNullOrWhiteSpace(data.Text))
 			{
 				throw new ArgumentException(nameof(data), "Input not in the correct format.");
@@ -92,15 +82,12 @@ namespace assignment_1
 			{
 				var result = await this.textInvoker.Invoke(repositoryRequest);
 
-				var response = req.CreateResponse(HttpStatusCode.OK);
-
-				await response.WriteAsJsonAsync(
-					new TextSummaryResponse
-					{
-						Ask = repositoryRequest.Text,
-						Length = int.Parse(result)
-					});
-				return response;
+				var response = new TextSummaryResponse
+				{
+					Ask = repositoryRequest.Text,
+					Length = int.Parse(result)
+				};
+				return await CreateValidResponse(req, response);
 			}
 			catch (Exception ex)
 			{
@@ -119,13 +106,7 @@ namespace assignment_1
 		{
 			using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-			var data = await JsonSerializer.DeserializeAsync<QueryRequest>(
-				new StreamReader(requestData.Body).BaseStream,
-				options: new JsonSerializerOptions
-				{
-					PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-				},
-				cancellationToken: cancellationSource.Token);
+			var data = await GetRequestData<QueryRequest>(requestData, cancellationSource);
 			if (data == null || string.IsNullOrWhiteSpace(data.Ask))
 			{
 				throw new ArgumentException(nameof(data), "Input not in the correct format.");
@@ -135,26 +116,66 @@ namespace assignment_1
 			{
 				var request = new NaturalLanguageQueryRequest { Query = data.Ask };
 				var result = await this.naturalLangaugeQueryInvoker.Invoke(request);
+				var responseObject = new QueryResponse
+				{
+					Response = result,
+				};
 
-				var response = requestData.CreateResponse(HttpStatusCode.OK);
-				await response.WriteAsJsonAsync(
-					new QueryResponse
-					{
-						Response = result,
-					});
-				return response;
+				return await CreateValidResponse(requestData, result);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				var response = requestData.CreateResponse(HttpStatusCode.InternalServerError);
 				response.WriteString(ex.Message);
 				return response;
 			}
-			
-
-
 		}
 
+		[Function(nameof(CreateEmbeddingsIndex))]
+		public async Task<HttpResponseData> CreateEmbeddingsIndex(
+			[HttpTrigger(AuthorizationLevel.Function, "post")]
+			HttpRequestData requestData,
+			CancellationToken cancellationToken
+			)
+		{
+			using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+			try
+			{
+				await this.index.Build();
+
+				return await CreateValidResponse(requestData, "Created");
+			}
+			catch (Exception ex)
+			{
+				var response = requestData.CreateResponse(HttpStatusCode.InternalServerError);
+				response.WriteString(ex.Message);
+				return response;
+			}
+		}
+
+
+		private static async Task<HttpResponseData> CreateValidResponse<TResponse>(HttpRequestData requestData, TResponse responseObject)
+		{
+			var response = requestData.CreateResponse(HttpStatusCode.OK);
+			await response.WriteAsJsonAsync(responseObject);
+			return response;
+		}
+
+		private static async Task<TRequest> GetRequestData<TRequest>(HttpRequestData requestData, CancellationTokenSource cancellationSource)
+			where TRequest : class, new()
+		{
+			var request = await JsonSerializer.DeserializeAsync<TRequest>(
+							new StreamReader(requestData.Body).BaseStream,
+							options: new JsonSerializerOptions
+							{
+								PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+							},
+							cancellationToken: cancellationSource.Token)
+				?? new TRequest();
+
+			return request;
+		}
 
 		public class WebsiteSummaryRequest
 		{

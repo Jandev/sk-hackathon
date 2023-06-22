@@ -1,0 +1,67 @@
+[
+  {
+    "id": 1,
+    "query": "Where does Jan work right now?",
+    "content": "At this moment, Jan is working as a Software Engineer at Microsoft. Along with his team members, he's working on a new Copilot solution in the Manufacturing space."
+  },
+  {
+    "id": 2,
+    "query": "Where did Jan work in the past?",
+    "content": "Jan has been employed at a couple of companies in his professional career. He has started working at a company called Clockwork, which was a brand of Ordina. The focus was creating software for pocket pc's. He later moved on working at Leones, later rebranded to NetSourcing, where he worked on developing software for healthcare and got experience with SharePoint development. Jan also worked a small time at Get There, as a consultant, but moved on rather quickly to Macaw. At Macaw he has learned a lot on writing Clean Code, software and solution design, and much more. After quite a few years he moved to 4Dotnet, where he has worked for a long time getting a lot experience designing and implementing solutions with Microsoft Azure."
+  },
+  {
+    "id": 3,
+    "query": "Are there any noteworthy things about Jan?",
+    "content": "He's been a bartender for quite a few years, so can probably pour you a good drink. He has also been awarded with the title Microsoft Azure MVP for all the community work he did and still does."
+  },
+  {
+    "id": 4,
+    "query": "",
+    "content": ""
+  },
+  {
+    "id": 5,
+    "query": "",
+    "content": ""
+  },
+  {
+    "id": 6,
+    "query": "",
+    "content": ""
+  },
+  {
+    "id": 7,
+    "query": "",
+    "content": ""
+  },
+  {
+    "id": 8,
+    "query": "",
+    "content": ""
+  },
+  {
+    "id": 9,
+    "query": "",
+    "content": ""
+  },
+  {
+    "id": 10,
+    "query": "",
+    "content": ""
+  },
+  {
+    "id": 11,
+    "query": "",
+    "content": ""
+  },
+  {
+    "id": 12,
+    "query": "",
+    "content": ""
+  },
+  {
+    "id": 13,
+    "query": "",
+    "content": ""
+  }
+]

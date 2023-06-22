@@ -9,6 +9,7 @@
     <UserSecretsId>15e14dfa-01a5-4957-918d-7a67ac78a5da</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Azure.Search.Documents" Version="11.5.0-alpha.20230622.1" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.10.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.13" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.7.0" />
@@ -19,6 +20,9 @@
     <PackageReference Include="Microsoft.SemanticKernel.Skills.Web" Version="0.13.442.1-preview" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Embeddings\content.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
