@@ -14,6 +14,7 @@ namespace assignment_1.Embeddings
 		private const string vectorSearchConfigName = "hackathon-vector-config";
 		private const string semanticSearchConfigName = "hackathon-semantic-config";
 		private const int MaximumSimilarEmbeddingsResults = 5;
+		private const double MinimumThreshold = 0.7;
 
 		private readonly OpenAIClient openAIClient;
 		private readonly SearchIndexClient indexClient;
@@ -72,6 +73,7 @@ namespace assignment_1.Embeddings
 				Vector = vector,
 				Size = MaximumSimilarEmbeddingsResults,
 				Select = { "query", "content" },
+				QueryAnswerThreshold = MinimumThreshold,
 			};
 			SearchResults<SearchDocument> response = await searchClient.SearchAsync<SearchDocument>(null, searchOptions);
 
