@@ -1,4 +1,5 @@
 ﻿using Azure.AI.OpenAI;
+using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
@@ -12,6 +13,7 @@ namespace assignment_1.Embeddings
 	{
 		private const string vectorSearchConfigName = "hackathon-vector-config";
 		private const string semanticSearchConfigName = "hackathon-semantic-config";
+		private const int MaximumSimilarEmbeddingsResults = 5;
 
 		private readonly OpenAIClient openAIClient;
 		private readonly SearchIndexClient indexClient;
@@ -30,6 +32,13 @@ namespace assignment_1.Embeddings
 			this.openAiSettings = openAiOptions.Value;
 		}
 
+		/// <summary>
+		/// Creates the index and uploads the documents to the Cognitive Search service.
+		/// </summary>
+		/// <remarks>
+		/// Should only be invoked once, to create or update the index. 
+		/// There's no need to run this in each and every call,
+		/// as it's quite expensive and takes a long time to complete.</remarks>
 		public async Task Build()
 		{
 			var index = CreateIndex();
@@ -39,6 +48,42 @@ namespace assignment_1.Embeddings
 
 			var searchClient = this.indexClient.GetSearchClient(cognitiveSearchSettings.VectorIndexName);
 			await searchClient.IndexDocumentsAsync(IndexDocumentsBatch.Upload(contentSearchCollection));
+		}
+
+
+		/// <summary>
+		/// Gets the nearest matching neighbors of the given <paramref name="ask"/>.
+		/// </summary>
+		/// <param name="ask">The request from the user.</param>
+		/// <returns>A collection of content that has a similarity match with the <paramref name="ask"/>.</returns>
+		public async Task<IEnumerable<ContentDocument>> GetNearestContent(string ask)
+		{
+			var embeddings = await GenerateEmbeddings(ask);
+			var searchClient = this.indexClient.GetSearchClient(cognitiveSearchSettings.VectorIndexName);
+
+			var vector = new SearchQueryVector
+			{
+				KNearestNeighborsCount = MaximumSimilarEmbeddingsResults,
+				Fields = "contentVector",
+				Value = embeddings.ToArray()
+			};
+			var searchOptions = new SearchOptions
+			{
+				Vector = vector,
+				Size = MaximumSimilarEmbeddingsResults,
+				Select = { "query", "content" },
+			};
+			SearchResults<SearchDocument> response = await searchClient.SearchAsync<SearchDocument>(null, searchOptions);
+
+			var resultSet = response.GetResultsAsync()
+					.Select(d =>
+					new ContentDocument
+					{
+						Query = d.Document["query"].ToString() ?? string.Empty,
+						Content = d.Document["content"].ToString() ?? string.Empty
+					});
+
+			return resultSet.ToEnumerable();
 		}
 
 		private SearchIndex CreateIndex()
@@ -140,7 +185,7 @@ namespace assignment_1.Embeddings
 		public class ContentDocument
 		{
 			public string Id { get; set; } = string.Empty;
-			
+
 			public string Query { get; set; } = string.Empty;
 
 			public string Content { get; set; } = string.Empty;
