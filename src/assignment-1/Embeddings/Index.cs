@@ -3,6 +3,7 @@ using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System.Reflection;
@@ -14,10 +15,11 @@ namespace assignment_1.Embeddings
 		private const string vectorSearchConfigName = "hackathon-vector-config";
 		private const string semanticSearchConfigName = "hackathon-semantic-config";
 		private const int MaximumSimilarEmbeddingsResults = 5;
-		private const double MinimumThreshold = 0.7;
+		private const double MinimumThreshold = 0.9;
 
 		private readonly OpenAIClient openAIClient;
 		private readonly SearchIndexClient indexClient;
+		private readonly ILogger<Index> logger;
 		private readonly Settings.CognitiveSearch cognitiveSearchSettings;
 		private readonly Settings.OpenAi openAiSettings;
 
@@ -25,10 +27,12 @@ namespace assignment_1.Embeddings
 			OpenAIClient openAIClient,
 			SearchIndexClient indexClient,
 			IOptions<Settings.CognitiveSearch> cognitiveSearchOptions,
-			IOptions<Settings.OpenAi> openAiOptions)
+			IOptions<Settings.OpenAi> openAiOptions,
+			ILogger<Index> logger)
 		{
 			this.openAIClient = openAIClient;
 			this.indexClient = indexClient;
+			this.logger = logger;
 			this.cognitiveSearchSettings = cognitiveSearchOptions.Value;
 			this.openAiSettings = openAiOptions.Value;
 		}
@@ -75,17 +79,35 @@ namespace assignment_1.Embeddings
 				Select = { "query", "content" },
 				QueryAnswerThreshold = MinimumThreshold,
 			};
-			SearchResults<SearchDocument> response = await searchClient.SearchAsync<SearchDocument>(null, searchOptions);
+			logger.LogInformation("Retrieving nearest matching neighbors of the request `{Ask}`", ask);
 
-			var resultSet = response.GetResultsAsync()
+			SearchResults<SearchDocument> searchResults = await searchClient.SearchAsync<SearchDocument>(null, searchOptions);
+
+			var resultSet = searchResults.GetResultsAsync()
 					.Select(d =>
-					new ContentDocument
+					new
 					{
+						Score = d.Score,
 						Query = d.Document["query"].ToString() ?? string.Empty,
 						Content = d.Document["content"].ToString() ?? string.Empty
-					});
+					})
+					.ToEnumerable(); ;
 
-			return resultSet.ToEnumerable();
+			var response = new List<ContentDocument>();
+			foreach (var item in resultSet)
+			{
+				this.logger.LogInformation("`{Query}` has score of `{Score}`", item.Score, item.Query);
+				
+				if (item.Score <= MinimumThreshold) continue;
+				
+				response.Add(new ContentDocument
+				{
+					Query = item.Query,
+					Content = item.Content
+				});
+			}			
+
+			return response;
 		}
 
 		private SearchIndex CreateIndex()
