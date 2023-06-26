@@ -23,6 +23,9 @@ namespace assignment_1.Summarize
 		public async Task<string> Invoke(NaturalLanguageQueryRequest request)
 		{
 			var configuration = new SequentialPlannerConfig();
+			// Remove the functions to read/write files, located in the `_GLOBAL_SKILLS_`.
+			configuration.ExcludedFunctions.Add("WriteAsync");
+			configuration.ExcludedFunctions.Add("ReadAsync");
 			var planner = new SequentialPlanner(kernel, configuration);
 
 			var plan = await planner.CreatePlanAsync(request.Query);
