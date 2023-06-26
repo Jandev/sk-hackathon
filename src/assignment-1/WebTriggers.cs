@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using assignment_1.Summarize;
 using Microsoft.Azure.Functions.Worker;
@@ -145,6 +146,49 @@ namespace assignment_1
 				await this.index.Build();
 
 				return await CreateValidResponse(requestData, "Created");
+			}
+			catch (Exception ex)
+			{
+				var response = requestData.CreateResponse(HttpStatusCode.InternalServerError);
+				response.WriteString(ex.Message);
+				return response;
+			}
+		}
+
+		[Function(nameof(SearchEmbeddings))]
+		public async Task<HttpResponseData> SearchEmbeddings(
+			[HttpTrigger(AuthorizationLevel.Function, "post")]
+			HttpRequestData requestData,
+			CancellationToken cancellationToken
+			)
+		{
+			using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+			var data = await GetRequestData<QueryRequest>(requestData, cancellationSource);
+			if (data == null || string.IsNullOrWhiteSpace(data.Ask))
+			{
+				throw new ArgumentException(nameof(data), "Input not in the correct format.");
+			}
+
+			try
+			{
+				var nearestContentCollection = await this.index.GetNearestContent(data.Ask);
+
+				// Create the prompt.
+				var sb = new StringBuilder();
+				sb.AppendLine($"In the below blocks is additional information of the request '{data.Ask}'.");
+				sb.AppendLine("---");
+				foreach ( var item in nearestContentCollection)
+				{
+					sb.AppendLine(item.Query);
+					sb.AppendLine(item.Content);
+					sb.AppendLine("---");
+				}
+				sb.AppendLine();
+				sb.AppendLine("Create a concise text for the above request and additional information.");
+				var response = await this.naturalLangaugeQueryInvoker.Invoke(new NaturalLanguageQueryRequest { Query = sb.ToString() });
+
+				return await CreateValidResponse(requestData, response);
 			}
 			catch (Exception ex)
 			{
