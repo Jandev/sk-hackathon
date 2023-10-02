@@ -16,13 +16,13 @@
   },
   {
     "id": 4,
-    "query": "Where does René work nowadays?",
-    "content": "René is working at Rubicon, where he's working in the role of Cloud Architect and Lead Developer at the customer PGGM."
+    "query": "Where does Peter work nowadays?",
+    "content": "Peter is working at SomeCompany, where he's working in the role of Cloud Architect and Lead Developer at the customer TheCustomer."
   },
   {
     "id": 5,
-    "query": "Where did René work in the past?",
-    "content": "It depends how far back you go. Before his current role at Rubicon, he worked at a different part of PGGM, but also has created awesome solutions at funda, the Ministery of Foreign Affairs and in a Food Processing company. Before joining Rubicon he has worked at various customers from Macaw, one of the most noteworthy projects was at Achmea."
+    "query": "Where did Peter work in the past?",
+    "content": "It depends how far back you go. Before his current role at SomeCompany, he worked at a different part of TheCustomer, but also has created awesome solutions at funda, the Ministery of Foreign Affairs and in a Food Processing company. Before joining SomeCompany he has worked at various customers from Macaw, one of the most noteworthy projects was at Achmea."
   },
   {
     "id": 6,
@@ -52,7 +52,7 @@
   {
     "id": 11,
     "query": "What's good food?",
-    "content": "Both Jan and René think having a proper barbecue is great for serving good food."
+    "content": "Both Jan and Peter think having a proper barbecue is great for serving good food."
   },
   {
     "id": 12,
