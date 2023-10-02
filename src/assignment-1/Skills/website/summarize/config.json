@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "type": "completion",
-  "description": "Create a summary of a specified URL.",
+  "description": "Create a summary from the specified content.",
   "completion": {
     "max_tokens": 2048,
     "temperature": 0.3,
@@ -12,8 +12,8 @@
   "input": {
     "parameters": [
       {
-        "name": "urlContent",
-        "description": "The content of a URL that needs to be summarized.",
+        "name": "input",
+        "description": "The HTML content that needs to be summarized.",
         "defaultValue": ""
       }
     ]

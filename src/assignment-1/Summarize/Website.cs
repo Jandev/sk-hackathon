@@ -48,7 +48,7 @@ namespace assignment_1.Summarize
 
 			var summarizeFunction = kernel.Skills.GetFunction(skill, summaryFunctionName);
 			var contextVariables = new ContextVariables();
-			contextVariables.Set("urlContent", strippedContent);
+			contextVariables.Set("input", strippedContent);
 
 			var result = await kernel.RunAsync(contextVariables, summarizeFunction);
 

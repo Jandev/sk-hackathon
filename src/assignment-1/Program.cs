@@ -12,6 +12,7 @@ using Azure.AI.OpenAI;
 using Azure;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
+using assignment_1.Skills.my_skills;
 
 var host = new HostBuilder()
 	.ConfigureFunctionsWorkerDefaults()
@@ -82,7 +83,8 @@ static void RegisterAIServices(IServiceCollection s)
 			{
 				logger.LogInformation("Importing native skills");
 				kernel.ImportSkill(new FileIOSkill());
-				kernel.ImportSkill(new TextSkill());
+				kernel.ImportSkill(new Microsoft.SemanticKernel.CoreSkills.TextSkill());
+				kernel.ImportSkill(new DownloadContent(s.GetRequiredService<IHttpClientFactory>()), "MySkills");
 			}
 		});
 	s.AddSingleton(
