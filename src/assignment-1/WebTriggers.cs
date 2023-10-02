@@ -176,7 +176,7 @@ namespace assignment_1
 
 				// Create the prompt.
 				var sb = new StringBuilder();
-				sb.AppendLine($"In the below blocks is additional information of the request '{data.Ask}'.");
+				sb.AppendLine($"Below are blocks of information for the request '{data.Ask}'.");
 				sb.AppendLine("---");
 				foreach ( var item in nearestContentCollection)
 				{
@@ -185,7 +185,7 @@ namespace assignment_1
 					sb.AppendLine("---");
 				}
 				sb.AppendLine();
-				sb.AppendLine("Create a concise text for the above request and additional information.");
+				sb.AppendLine("Use the above information and create a summary from it.");
 				var response = await this.naturalLangaugeQueryInvoker.Invoke(new NaturalLanguageQueryRequest { Query = sb.ToString() });
 
 				return await CreateValidResponse(requestData, response);

@@ -1,20 +1,24 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.Orchestration;
-using System;
+using System.Text.RegularExpressions;
 
 namespace assignment_1.Summarize
 {
 	internal class Website : IInvoker<WebsiteRequest>
 	{
+		private readonly IHttpClientFactory httpClientFactory;
 		private readonly ILogger<Website> logger;
 		private Settings.OpenAi openAiSettings;
 
-		public Website(IOptions<Settings.OpenAi> options,
+		public Website(
+			IHttpClientFactory httpClientFactory,
+			IOptions<Settings.OpenAi> options,
 			ILogger<Website> logger)
 		{
 			this.openAiSettings = options.Value;
+			this.httpClientFactory = httpClientFactory;
 			this.logger = logger;
 		}
 
@@ -30,10 +34,12 @@ namespace assignment_1.Summarize
 				openAiSettings.ServiceKey,
 				openAiSettings.ServiceModelName,
 				logger);
-			
+
+			string strippedContent = await GetContentViaRegularCodeFlow(request);
+
 			var summarizeFunction = kernel.Skills.GetFunction(skill, summaryFunctionName);
 			var contextVariables = new ContextVariables();
-			contextVariables.Set("url", request.Url.ToString());
+			contextVariables.Set("urlContent", strippedContent);
 
 			var result = await kernel.RunAsync(contextVariables, summarizeFunction);
 
@@ -44,6 +50,38 @@ namespace assignment_1.Summarize
 			}
 
 			return result.Result.Trim();
+		}
+
+		private async Task<string> GetContentViaRegularCodeFlow(WebsiteRequest request)
+		{
+			var content = await DownloadContent(request.Url.ToString());
+			Match match = Regex.Match(content, "<body[^>]*>(.*?)</body>", RegexOptions.Singleline);
+			string strippedContent;
+			if (match.Success)
+			{
+				string foundContent = match.Groups[1].Value;
+				strippedContent = foundContent.Substring(0, foundContent.Length > 1800 ? 1800 : foundContent.Length);
+			}
+			else
+			{
+				throw new Exception();
+			}
+
+			return strippedContent;
+		}
+
+		private async Task<string> DownloadContent(string url)
+		{
+			using var client = this.httpClientFactory.CreateClient();
+			var response = await client.GetAsync(url);
+			if (response.IsSuccessStatusCode)
+			{
+				return await response.Content.ReadAsStringAsync();
+			}
+			else
+			{
+				throw new Exception($"Failed to download content from {url}. Status code: {response.StatusCode}");
+			}
 		}
 	}
 

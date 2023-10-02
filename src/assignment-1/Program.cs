@@ -108,4 +108,5 @@ static void RegisterAIServices(IServiceCollection s)
 			return indexClient;
 		});
 	s.AddTransient<assignment_1.Embeddings.Index>();
+	s.AddHttpClient();
 }
