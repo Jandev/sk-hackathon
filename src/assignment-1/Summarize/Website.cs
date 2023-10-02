@@ -34,8 +34,17 @@ namespace assignment_1.Summarize
 				openAiSettings.ServiceKey,
 				openAiSettings.ServiceModelName,
 				logger);
+			string strippedContent;
 
-			string strippedContent = await GetContentViaRegularCodeFlow(request);
+			bool beingOldFasioned = true;
+			if (beingOldFasioned)
+			{
+				strippedContent = await GetContentViaRegularCodeFlow(request);
+			}
+			else
+			{
+				strippedContent = await GetContentViaModernWays(request, kernel);
+			}
 
 			var summarizeFunction = kernel.Skills.GetFunction(skill, summaryFunctionName);
 			var contextVariables = new ContextVariables();
@@ -82,6 +91,21 @@ namespace assignment_1.Summarize
 			{
 				throw new Exception($"Failed to download content from {url}. Status code: {response.StatusCode}");
 			}
+		}
+
+		private async Task<string> GetContentViaModernWays(WebsiteRequest request, Microsoft.SemanticKernel.IKernel kernel)
+		{
+			const string siteSkill = "SiteContentSkill";
+			const string getBodyFunctionName = "GetBody";
+			kernel.ImportSkill(new Skills.my_skills.DownloadContent(this.httpClientFactory), siteSkill);
+			var getBodyFunction = kernel.Skills.GetFunction(
+					siteSkill,
+					getBodyFunctionName);
+
+			var getBodyContextVariables = new ContextVariables(request.Url.ToString());
+			var getBodyContext = await kernel.RunAsync(getBodyContextVariables, getBodyFunction);
+			var strippedContent = getBodyContext.Result.Trim();
+			return strippedContent;
 		}
 	}
 
