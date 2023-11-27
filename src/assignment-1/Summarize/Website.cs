@@ -1,6 +1,6 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Orchestration;
 using System.Text.RegularExpressions;
 
@@ -22,7 +22,9 @@ namespace assignment_1.Summarize
 			this.logger = logger;
 		}
 
-		public async Task<string> Invoke(WebsiteRequest request)
+		public async Task<string> Invoke(
+			WebsiteRequest request,
+			CancellationToken cancellationToken)
 		{
 			const string skill = "website";
 			const string summaryFunctionName = "summarize";
@@ -43,22 +45,17 @@ namespace assignment_1.Summarize
 			}
 			else
 			{
-				strippedContent = await GetContentViaModernWays(request, kernel);
+				strippedContent = await GetContentViaModernWays(request, kernel, cancellationToken);
 			}
 
-			var summarizeFunction = kernel.Skills.GetFunction(skill, summaryFunctionName);
+			var summarizeFunction = kernel.Functions.GetFunction(skill, summaryFunctionName);
 			var contextVariables = new ContextVariables();
 			contextVariables.Set("input", strippedContent);
 
-			var result = await kernel.RunAsync(contextVariables, summarizeFunction);
+			var result = await kernel.RunAsync(contextVariables, cancellationToken, summarizeFunction);
 
-			if (result.ErrorOccurred)
-			{
-				this.logger.LogError(result.LastErrorDescription);
-				throw new Exception(result.LastErrorDescription);
-			}
 
-			return result.Result.Trim();
+			return result.GetValue<string>();
 		}
 
 		private async Task<string> GetContentViaRegularCodeFlow(WebsiteRequest request)
@@ -93,18 +90,18 @@ namespace assignment_1.Summarize
 			}
 		}
 
-		private async Task<string> GetContentViaModernWays(WebsiteRequest request, Microsoft.SemanticKernel.IKernel kernel)
+		private async Task<string> GetContentViaModernWays(WebsiteRequest request, Microsoft.SemanticKernel.IKernel kernel, CancellationToken cancellationToken)
 		{
 			const string siteSkill = "SiteContentSkill";
 			const string getBodyFunctionName = "GetBody";
-			kernel.ImportSkill(new Skills.my_skills.DownloadContent(this.httpClientFactory), siteSkill);
-			var getBodyFunction = kernel.Skills.GetFunction(
+			kernel.ImportFunctions(new Skills.my_skills.DownloadContent(this.httpClientFactory), siteSkill);
+			var getBodyFunction = kernel.Functions.GetFunction(
 					siteSkill,
 					getBodyFunctionName);
 
 			var getBodyContextVariables = new ContextVariables(request.Url.ToString());
-			var getBodyContext = await kernel.RunAsync(getBodyContextVariables, getBodyFunction);
-			var strippedContent = getBodyContext.Result.Trim();
+			var getBodyContext = await kernel.RunAsync(getBodyContextVariables, cancellationToken, getBodyFunction);
+			var strippedContent = getBodyContext.GetValue<string>();
 			return strippedContent;
 		}
 	}

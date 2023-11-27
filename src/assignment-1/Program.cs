@@ -6,13 +6,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel.CoreSkills;
 using System.Reflection;
 using Azure.AI.OpenAI;
 using Azure;
-using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using assignment_1.Skills.my_skills;
+using Microsoft.SemanticKernel.Plugins.Core;
 
 var host = new HostBuilder()
 	.ConfigureFunctionsWorkerDefaults()
@@ -76,15 +75,15 @@ static void RegisterAIServices(IServiceCollection s)
 			{
 				logger.LogInformation("Importing semantic skills");
 				string skillsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "Skills");
-				kernel.ImportSemanticSkillFromDirectory(skillsPath, "website");
+				kernel.ImportSemanticFunctionsFromDirectory(skillsPath, "website");
 			}
 
 			void AddNativeSkills()
 			{
 				logger.LogInformation("Importing native skills");
-				kernel.ImportSkill(new FileIOSkill());
-				kernel.ImportSkill(new Microsoft.SemanticKernel.CoreSkills.TextSkill());
-				kernel.ImportSkill(new DownloadContent(s.GetRequiredService<IHttpClientFactory>()), "MySkills");
+				kernel.ImportFunctions(new FileIOPlugin());
+				kernel.ImportFunctions(new Microsoft.SemanticKernel.Plugins.Core.TextPlugin());
+				kernel.ImportFunctions(new DownloadContent(s.GetRequiredService<IHttpClientFactory>()), "MySkills");
 			}
 		});
 	s.AddSingleton(

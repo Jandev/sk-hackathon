@@ -1,6 +1,7 @@
 ﻿using assignment_1.Skills.my_skills;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Orchestration;
 
 namespace assignment_1.Summarize
@@ -18,7 +19,9 @@ namespace assignment_1.Summarize
 			this.logger = logger;
 		}
 
-		public async Task<string> Invoke(TextRequest request)
+		public async Task<string> Invoke(
+			TextRequest request,
+			CancellationToken cancellationToken)
 		{
 			const string skill = "TextSkill";
 			const string lengthFunctionName = "Length";
@@ -30,22 +33,15 @@ namespace assignment_1.Summarize
 				openAiSettings.ServiceKey,
 				openAiSettings.ServiceModelName,
 				logger);
-			kernel.ImportSkill(new TextSkill(), "TextSkill");
+			kernel.ImportFunctions(new TextSkill(), "TextSkill");
 			
-			var lengthFunction = kernel.Skills.GetFunction(
+			var lengthFunction = kernel.Functions.GetFunction(
 				skill, 
 				lengthFunctionName);
 			var contextVariables = new ContextVariables(request.Text);
 
-			var result = await kernel.RunAsync(contextVariables, lengthFunction);
-
-			if (result.ErrorOccurred)
-			{
-				this.logger.LogError(result.LastErrorDescription);
-				throw new Exception(result.LastErrorDescription);
-			}
-
-			return result.Result.Trim();
+			var result = await kernel.RunAsync(contextVariables, cancellationToken, lengthFunction);
+			return result.GetValue<string>();
 		}
 	}
 

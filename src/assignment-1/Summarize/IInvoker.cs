@@ -2,6 +2,6 @@
 {
 	public interface IInvoker<TRequest>
 	{
-		Task<string> Invoke(TRequest request);
+		Task<string> Invoke(TRequest request, CancellationToken cancellationToken);
 	}
 }

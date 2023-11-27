@@ -83,15 +83,14 @@ namespace assignment_1.Embeddings
 
 			SearchResults<SearchDocument> searchResults = await searchClient.SearchAsync<SearchDocument>(null, searchOptions);
 
-			var resultSet = searchResults.GetResultsAsync()
+			var resultSet = searchResults.GetResultsAsync().ToBlockingEnumerable()
 					.Select(d =>
 					new
 					{
 						Score = d.Score,
 						Query = d.Document["query"].ToString() ?? string.Empty,
 						Content = d.Document["content"].ToString() ?? string.Empty
-					})
-					.ToEnumerable(); ;
+					});
 
 			var response = new List<ContentDocument>();
 			foreach (var item in resultSet)

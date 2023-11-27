@@ -1,5 +1,5 @@
-﻿using Microsoft.SemanticKernel.Orchestration;
-using Microsoft.SemanticKernel.SkillDefinition;
+﻿using Microsoft.SemanticKernel;
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 
 namespace assignment_1.Skills.my_skills
@@ -16,16 +16,11 @@ namespace assignment_1.Skills.my_skills
 			this.httpClientFactory = httpClientFactory;
 		}
 
-		[SKFunction("Retrieve the body from a specified website URL.")]
-		[SKFunctionName("GetBody")]
-		[SKFunctionInput(Description = "Retrieves the content of the body from an HTML page.")]
-		public async Task<string> GetBody(string input, SKContext context)
+		[SKFunction, Description("Retrieve the body from a specified website URL.")]
+		public async Task<string> GetBody(
+			[Description("The URL to of the website to download the body from.")]
+			string input)
 		{
-			if (string.IsNullOrEmpty(input))
-			{
-				context.Fail("No input specified to download the body from.");
-			}
-
 			var content = await GetContent(input);
 
 			return content;

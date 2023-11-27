@@ -5,7 +5,6 @@ using assignment_1.Summarize;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using static Google.Apis.CustomSearchAPI.v1.Data.Search.QueriesData;
 
 namespace assignment_1
 {
@@ -47,7 +46,7 @@ namespace assignment_1
 			var websiteRequest = new WebsiteRequest(new Uri(data.Url));
 			try
 			{
-				var summary = await this.websiteSummaryInvoker.Invoke(websiteRequest);
+				var summary = await this.websiteSummaryInvoker.Invoke(websiteRequest, cancellationSource.Token);
 
 				var response = new WebsiteSummaryResponse
 				{
@@ -81,7 +80,7 @@ namespace assignment_1
 			var repositoryRequest = new TextRequest(data.Text);
 			try
 			{
-				var result = await this.textInvoker.Invoke(repositoryRequest);
+				var result = await this.textInvoker.Invoke(repositoryRequest, cancellationSource.Token);
 
 				var response = new TextSummaryResponse
 				{
@@ -116,7 +115,7 @@ namespace assignment_1
 			try
 			{
 				var request = new NaturalLanguageQueryRequest { Query = data.Ask };
-				var result = await this.naturalLangaugeQueryInvoker.Invoke(request);
+				var result = await this.naturalLangaugeQueryInvoker.Invoke(request, cancellationSource.Token);
 				var responseObject = new QueryResponse
 				{
 					Response = result,
@@ -186,7 +185,7 @@ namespace assignment_1
 				}
 				sb.AppendLine();
 				sb.AppendLine("Use the above information and create a summary from it.");
-				var response = await this.naturalLangaugeQueryInvoker.Invoke(new NaturalLanguageQueryRequest { Query = sb.ToString() });
+				var response = await this.naturalLangaugeQueryInvoker.Invoke(new NaturalLanguageQueryRequest { Query = sb.ToString() }, cancellationSource.Token);
 
 				return await CreateValidResponse(requestData, response);
 			}

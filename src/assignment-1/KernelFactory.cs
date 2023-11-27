@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.TemplateEngine;
 using System.Reflection;
 
 namespace assignment_1
@@ -21,51 +20,21 @@ namespace assignment_1
 			string serviceModelName,
 			ILogger logger)
 		{
-			KernelBuilder builder = Kernel.Builder;
-			builder = ConfigureKernelBuilder(
-				serviceDeploymentId,
-				serviceCompletionEndpoint,
-				serviceKey,
-				serviceModelName,
-				builder);
-			return CompleteKernelSetup(builder, logger);
-		}
-
-		private static KernelBuilder ConfigureKernelBuilder(
-			string serviceDeploymentId,
-			string serviceCompletionEndpoint,
-			string serviceKey,
-			string serviceModelName,
-			KernelBuilder builder
-			)
-		{
-			builder = builder
-				.Configure(c =>
-				{
-					c.AddAzureTextCompletionService(
-						serviceDeploymentId,
+			IKernel kernel = new KernelBuilder()
+				.WithAzureTextCompletionService(
+					serviceDeploymentId,
 						serviceCompletionEndpoint,
 						serviceKey,
-						serviceId: serviceModelName);
-				});
+						serviceId: serviceModelName)
+				.Build();
 
-			return builder;
-		}
-
-		private static IKernel CompleteKernelSetup(
-			KernelBuilder builder,
-			ILogger logger)
-		{
-			IKernel kernel = builder.Build();
-
-			RegisterSemanticSkills(kernel, SkillsPath(), logger);
+			RegisterSemanticSkills(kernel, SkillsPath());
 			return kernel;
 		}
 
 		private static void RegisterSemanticSkills(
 			IKernel kernel,
-			string skillsFolder,
-			ILogger logger)
+			string skillsFolder)
 		{
 			foreach (string skPromptPath in Directory.EnumerateFiles(skillsFolder, "*.txt", SearchOption.AllDirectories))
 			{
@@ -79,14 +48,7 @@ namespace assignment_1
 
 				if (ShouldLoad(currentFolder.Name, skillsToLoad))
 				{
-					try
-					{
-						_ = kernel.ImportSemanticSkillFromDirectory(skillsFolder, currentFolder.Name);
-					}
-					catch (TemplateException e)
-					{
-						logger.LogWarning("Could not load skill from {0} with error: {1}", currentFolder.Name, e.Message);
-					}
+					_ = kernel.ImportSemanticFunctionsFromDirectory(skillsFolder, currentFolder.Name);
 				}
 			}
 		}
