@@ -26,6 +26,11 @@ namespace assignment_1
 						serviceCompletionEndpoint,
 						serviceKey,
 						serviceId: serviceModelName)
+				.WithAzureOpenAIChatCompletionService(
+					serviceDeploymentId,
+					serviceCompletionEndpoint,
+					serviceKey,
+					serviceId: serviceModelName)
 				.Build();
 
 			RegisterSemanticSkills(kernel, SkillsPath());

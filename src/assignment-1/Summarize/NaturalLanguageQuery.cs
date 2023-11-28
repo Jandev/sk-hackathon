@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Orchestration;
 using Microsoft.SemanticKernel.Planners;
+using Microsoft.SemanticKernel.Planners.Handlebars;
+using System.Text.Json;
 
 namespace assignment_1.Summarize
 {
@@ -22,17 +25,23 @@ namespace assignment_1.Summarize
 			NaturalLanguageQueryRequest request,
 			CancellationToken cancellationToken)
 		{
-			var configuration = new SequentialPlannerConfig();
+			//var configuration = new SequentialPlannerConfig();
 			// Remove the functions to read/write files, located in the `_GLOBAL_SKILLS_`.
+			//configuration.ExcludedFunctions.Add("Write");
+			//configuration.ExcludedFunctions.Add("Read");
+			//var planner = new SequentialPlanner(kernel, configuration);
+			var configuration = new HandlebarsPlannerConfig();
 			configuration.ExcludedFunctions.Add("Write");
 			configuration.ExcludedFunctions.Add("Read");
-			var planner = new SequentialPlanner(kernel, configuration);
+			var planner = new HandlebarsPlanner(kernel, configuration);
 
 			var plan = await planner.CreatePlanAsync(request.Query, cancellationToken);
-			this.logger.LogInformation("Original plan: {plan}", plan.ToJson());
+			this.logger.LogInformation("Original plan: {plan}", plan);
 
-			var executedPlan = await kernel.RunAsync(plan);
-			return executedPlan.GetValue<string>() ?? string.Empty;
+			var result = plan.Invoke(kernel.CreateNewContext(), new Dictionary<string, object?>(), cancellationToken);
+			return result.GetValue<string>();
+			//var executedPlan = await kernel.RunAsync(/*request.Query*/ctx, cancellationToken, plan);
+			//return executedPlan.GetValue<string>() ?? string.Empty;
 		}
 	}
 

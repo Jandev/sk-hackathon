@@ -19,9 +19,9 @@ namespace assignment_1.Skills.my_skills
 		[SKFunction, Description("Retrieve the body from a specified website URL.")]
 		public async Task<string> GetBody(
 			[Description("The URL to of the website to download the body from.")]
-			string input)
+			string urlToLoad)
 		{
-			var content = await GetContent(input);
+			var content = await GetContent(urlToLoad);
 
 			return content;
 
@@ -39,7 +39,7 @@ namespace assignment_1.Skills.my_skills
 			}
 			else
 			{
-				throw new Exception();
+				return "No information found.";
 			}
 
 			return strippedContent;
